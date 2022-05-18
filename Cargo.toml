@@ -9,12 +9,14 @@ homepage = "https://github.com/yangby-cryptape/ckb-light-client"
 repository = "https://github.com/yangby-cryptape/ckb-light-client"
 
 [dependencies]
-ckb-app-config    = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client" }
-ckb-async-runtime = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client" }
-ckb-types         = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client" }
-ckb-network       = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client" }
-ckb-jsonrpc-types = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client" }
-ckb-merkle-mountain-range = "0.3.2"
+ckb-app-config    = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-async-runtime = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-constant      = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-types         = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-network       = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-jsonrpc-types = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-pow           = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-merkle-mountain-range = "0.4.0"
 golomb-coded-set = { git = "https://github.com/TheWaWaR/golomb-coded-set"}
 rocksdb = { package = "ckb-rocksdb", version ="=0.16.1", features = ["snappy"] }
 anyhow = "1.0.56"
