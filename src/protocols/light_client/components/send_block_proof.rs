@@ -64,6 +64,11 @@ impl<'a> SendBlockProofProcess<'a> {
         {
             let prev_request = prove_request.get_request();
             let difficulty_boundary: U256 = prev_request.difficulty_boundary().unpack();
+            let mut difficulties: Vec<U256> = prev_request
+                .difficulties()
+                .into_iter()
+                .map(|item| item.unpack())
+                .collect();
 
             {
                 // Check the first block in last-N blocks.
@@ -91,6 +96,15 @@ impl<'a> SendBlockProofProcess<'a> {
                     first_last_n_header.chain_root().total_difficulty().unpack();
                 let total_difficulty = total_difficulty_before.saturating_add(&block_difficulty);
 
+                // All total difficulties for sampled blocks should be less
+                // than the total difficulty of any last-N blocks.
+                if total_difficulty < difficulty_boundary {
+                    difficulties = difficulties
+                        .into_iter()
+                        .take_while(|d| d < &total_difficulty)
+                        .collect();
+                }
+
                 let last_n_blocks: u64 = prev_request.last_n_blocks().unpack();
                 // Last-N blocks should be satisfied the follow condition.
                 if self.message.last_n_headers().len() as u64 > last_n_blocks
@@ -104,13 +118,6 @@ impl<'a> SendBlockProofProcess<'a> {
                     return StatusCode::InvalidChainRootForSamples.into();
                 }
             }
-
-            let mut difficulties: Vec<U256> = prev_request
-                .difficulties()
-                .into_iter()
-                .map(|item| item.unpack())
-                .take_while(|d| d < &difficulty_boundary)
-                .collect();
 
             for item in self.message.sampled_headers().iter() {
                 let header_with_chain_root = item.to_entity();
@@ -139,21 +146,26 @@ impl<'a> SendBlockProofProcess<'a> {
                 // Total difficulty for any sampled blocks should be valid.
                 while let Some(curr_difficulty) = difficulties.first().cloned() {
                     if curr_difficulty < total_difficulty_lhs {
+                        // Current difficulty has no sample.
                         difficulties.remove(0);
                         continue;
                     } else if curr_difficulty > total_difficulty_rhs {
                         break;
                     } else {
+                        // Current difficulty has one sample, and the sample is current block.
+                        difficulties.remove(0);
                         is_valid = true;
-                        break;
                     }
                 }
 
                 if !is_valid {
                     error!(
-                        "failed: total difficulty is not valid for sampled block#{} (hash: {:#x})",
+                        "failed: total difficulty is not valid for sampled block#{}, \
+                        hash is {:#x}, difficulty range is [{},{}].",
                         header.number(),
-                        header.hash()
+                        header.hash(),
+                        total_difficulty_lhs,
+                        total_difficulty_rhs,
                     );
                     return StatusCode::InvalidTotalDifficultyForSamples.into();
                 }
@@ -465,7 +477,7 @@ fn verify_total_difficuly(
             .ok_or_else(|| {
                 format!(
                     "failed since the epoch difficulty increased \
-                                    too fast ({}->{}) during epochs ([{},{}])",
+                    too fast ({}->{}) during epochs ([{},{}])",
                     start_epoch_difficulty, end_epoch_difficulty, start_epoch, end_epoch
                 )
             })?,
@@ -478,23 +490,31 @@ fn verify_total_difficuly(
             .ok_or_else(|| {
                 format!(
                     "failed since the epoch difficulty decreased \
-                                    too fast ({}->{}) during epochs ([{},{}])",
+                    too fast ({}->{}) during epochs ([{},{}])",
                     start_epoch_difficulty, end_epoch_difficulty, start_epoch, end_epoch
                 )
             })?,
         };
 
         // Step-2 Check the range of total difficulty.
-        let start_epoch_blocks_count = start_epoch.length() - start_epoch.index();
-        let end_epoch_blocks_count = end_epoch.length() - end_epoch.index();
-        let unaligned_difficulty_calculated = start_block_difficulty * start_epoch_blocks_count
-            + end_block_difficulty * end_epoch_blocks_count;
+        let start_epoch_blocks_count = start_epoch.length() - start_epoch.index() - 1;
+        let end_epoch_blocks_count = end_epoch.index() + 1;
+        let unaligned_difficulty_calculated = &start_block_difficulty * start_epoch_blocks_count
+            + &end_block_difficulty * end_epoch_blocks_count;
         if epochs_switch_count == 1 {
             if total_difficulty != unaligned_difficulty_calculated {
                 let errmsg = format!(
-                    "failed since total difficulty is {} but the calculated is {} \
-                                during epochs ([{:#},{:#}])",
-                    total_difficulty, unaligned_difficulty_calculated, start_epoch, end_epoch
+                    "failed since total difficulty is {} \
+                    but the calculated is {} (= {} * {} + {} * {}) \
+                    during epochs ([{:#},{:#}])",
+                    total_difficulty,
+                    unaligned_difficulty_calculated,
+                    start_block_difficulty,
+                    start_epoch_blocks_count,
+                    end_block_difficulty,
+                    end_epoch_blocks_count,
+                    start_epoch,
+                    end_epoch
                 );
                 return Err(errmsg);
             }
@@ -550,7 +570,7 @@ fn verify_total_difficuly(
             {
                 let errmsg = format!(
                     "failed since total difficulty ({}) isn't in the range ({}+[{},{}]) \
-                                during epochs ([{:#},{:#}])",
+                    during epochs ([{:#},{:#}])",
                     total_difficulty,
                     unaligned_difficulty_calculated,
                     aligned_difficulty_min,
