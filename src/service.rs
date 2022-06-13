@@ -1,7 +1,14 @@
 use ckb_jsonrpc_types::{
-    BlockNumber, Capacity, CellOutput, JsonBytes, OutPoint, Script, TransactionView, Uint32, Uint64,
+    BlockNumber, Capacity, CellOutput, JsonBytes, OutPoint, Script, Transaction, TransactionView,
+    Uint32, Uint64,
 };
-use ckb_types::{core, packed, prelude::*};
+use ckb_network::{NetworkController, SupportProtocols};
+use ckb_types::{
+    core::{self, Cycle},
+    packed,
+    prelude::*,
+    H256,
+};
 use jsonrpc_core::{Error, IoHandler, Result};
 use jsonrpc_derive::rpc;
 use jsonrpc_http_server::{Server, ServerBuilder};
@@ -12,9 +19,16 @@ use rocksdb::{
     Direction, IteratorMode,
 };
 use serde::{Deserialize, Serialize};
-use std::net::ToSocketAddrs;
+use std::{
+    net::ToSocketAddrs,
+    sync::{Arc, RwLock},
+};
 
-use crate::storage::{self, extract_raw_data, Key, KeyPrefix, Storage};
+use crate::{
+    protocols::PendingTxs,
+    storage::{self, extract_raw_data, Key, KeyPrefix, Storage},
+    verify::verify_tx,
+};
 
 #[rpc(server)]
 pub trait BlockFilterRpc {
@@ -45,6 +59,12 @@ pub trait BlockFilterRpc {
 
     #[rpc(name = "get_cells_capacity")]
     fn get_cells_capacity(&self, search_key: SearchKey) -> Result<Capacity>;
+}
+
+#[rpc(server)]
+pub trait TransactionRpc {
+    #[rpc(name = "send_transaction")]
+    fn send_transaction(&self, tx: Transaction) -> Result<H256>;
 }
 
 #[derive(Deserialize, Serialize)]
@@ -114,6 +134,12 @@ pub struct Pagination<T> {
 }
 
 pub struct BlockFilterRpcImpl {
+    storage: Storage,
+}
+
+pub struct TransactionRpcImpl {
+    network_controller: NetworkController,
+    pending_txs: Arc<RwLock<PendingTxs>>,
     storage: Storage,
 }
 
@@ -622,7 +648,35 @@ fn build_filter_options(
     ))
 }
 
-pub struct Service {
+// TODO get from consensus
+const MAX_CYCLES: Cycle = 3_500_000 * 597;
+
+impl TransactionRpc for TransactionRpcImpl {
+    fn send_transaction(&self, tx: Transaction) -> Result<H256> {
+        let tx: packed::Transaction = tx.into();
+        let tx = tx.into_view();
+        // TODO get from storage
+        let tip_header = packed::Header::default().into_view();
+        let cycles = verify_tx(&self.storage, &tip_header, tx.clone(), MAX_CYCLES)
+            .map_err(|e| Error::invalid_params(format!("invalid transaction: {:?}", e)))?;
+        self.pending_txs
+            .write()
+            .expect("pending_txs lock is poisoned")
+            .push(tx.clone(), cycles);
+
+        let content = packed::RelayTransactionHashes::new_builder()
+            .tx_hashes(vec![tx.hash()].pack())
+            .build();
+        let message = packed::RelayMessage::new_builder().set(content).build();
+        self.network_controller
+            .broadcast(SupportProtocols::RelayV2.protocol_id(), message.as_bytes())
+            .map_err(|_err| Error::internal_error())?;
+
+        Ok(tx.hash().unpack())
+    }
+}
+
+pub(crate) struct Service {
     listen_address: String,
 }
 
@@ -633,10 +687,23 @@ impl Service {
         }
     }
 
-    pub fn start(&self, storage: Storage) -> Server {
+    pub fn start(
+        &self,
+        network_controller: NetworkController,
+        storage: Storage,
+        pending_txs: Arc<RwLock<PendingTxs>>,
+    ) -> Server {
         let mut io_handler = IoHandler::new();
-        let rpc_impl = BlockFilterRpcImpl { storage };
-        io_handler.extend_with(rpc_impl.to_delegate());
+        let block_filter_rpc_impl = BlockFilterRpcImpl {
+            storage: storage.clone(),
+        };
+        let transaction_rpc_impl = TransactionRpcImpl {
+            network_controller,
+            pending_txs,
+            storage,
+        };
+        io_handler.extend_with(block_filter_rpc_impl.to_delegate());
+        io_handler.extend_with(transaction_rpc_impl.to_delegate());
 
         ServerBuilder::new(io_handler)
             .cors(DomainsValidation::AllowOnly(vec![
@@ -1062,5 +1129,108 @@ mod tests {
             .unwrap();
 
         assert_eq!(0, capacity.value(), "lock_script2 is not filtered");
+    }
+
+    #[test]
+    fn get_cells_capacity_bug() {
+        let storage = new_storage("get_cells_capacity_bug");
+        let rpc = BlockFilterRpcImpl {
+            storage: storage.clone(),
+        };
+
+        // setup test data
+        let lock_script1 = ScriptBuilder::default()
+            .code_hash(H256(rand::random()).pack())
+            .hash_type(ScriptHashType::Data.into())
+            .args(Bytes::from(b"lock_script1".to_vec()).pack())
+            .build();
+        storage.update_filter_scripts(HashMap::from([(lock_script1.clone(), 0)]));
+
+        let tx00 = TransactionBuilder::default()
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(222).pack())
+                    .lock(lock_script1.clone())
+                    .build(),
+            )
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(333).pack())
+                    .lock(lock_script1.clone())
+                    .build(),
+            )
+            .output_data(Default::default())
+            .output_data(Default::default())
+            .build();
+
+        let block0 = BlockBuilder::default()
+            .transaction(tx00.clone())
+            .header(HeaderBuilder::default().number(0.pack()).build())
+            .build();
+        storage.filter_block(block0.data());
+
+        let lock_script2 = ScriptBuilder::default()
+            .code_hash(H256(rand::random()).pack())
+            .hash_type(ScriptHashType::Data.into())
+            .args(Bytes::from(b"lock_script2".to_vec()).pack())
+            .build();
+
+        let tx10 = TransactionBuilder::default()
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(100).pack())
+                    .lock(lock_script2.clone())
+                    .build(),
+            )
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(1000).pack())
+                    .lock(lock_script1.clone())
+                    .build(),
+            )
+            .output_data(Default::default())
+            .output_data(Default::default())
+            .build();
+
+        let block1 = BlockBuilder::default()
+            .transaction(tx10.clone())
+            .header(HeaderBuilder::default().number(1.pack()).build())
+            .build();
+        storage.filter_block(block1.data());
+
+        let tx20 = TransactionBuilder::default()
+            .input(CellInput::new(OutPoint::new(tx00.hash(), 1), 0))
+            .input(CellInput::new(OutPoint::new(tx10.hash(), 1), 0))
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(5000).pack())
+                    .lock(lock_script2.clone())
+                    .build(),
+            )
+            .output(
+                CellOutputBuilder::default()
+                    .capacity(capacity_bytes!(3000).pack())
+                    .lock(lock_script1.clone())
+                    .build(),
+            )
+            .output_data(Default::default())
+            .output_data(Default::default())
+            .build();
+
+        let block2 = BlockBuilder::default()
+            .transaction(tx20.clone())
+            .header(HeaderBuilder::default().number(2.pack()).build())
+            .build();
+        storage.filter_block(block2.data());
+
+        let capacity = rpc
+            .get_cells_capacity(SearchKey {
+                script: lock_script1.clone().into(),
+                script_type: ScriptType::Lock,
+                filter: None,
+            })
+            .unwrap();
+
+        assert_eq!((222 + 3000) * 100000000, capacity.value());
     }
 }

@@ -252,7 +252,7 @@ dependencies = [
 [[package]]
 name = "ckb-app-config"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-build-info",
  "ckb-chain-spec",
@@ -278,7 +278,7 @@ dependencies = [
 [[package]]
 name = "ckb-async-runtime"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-logger",
  "ckb-spawn",
@@ -289,12 +289,12 @@ dependencies = [
 [[package]]
 name = "ckb-build-info"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 
 [[package]]
 name = "ckb-chain-spec"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-constant",
  "ckb-crypto",
@@ -314,7 +314,7 @@ dependencies = [
 [[package]]
 name = "ckb-channel"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "crossbeam-channel",
 ]
@@ -322,12 +322,12 @@ dependencies = [
 [[package]]
 name = "ckb-constant"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 
 [[package]]
 name = "ckb-crypto"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-fixed-hash",
  "faster-hex",
@@ -340,7 +340,7 @@ dependencies = [
 [[package]]
 name = "ckb-dao-utils"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "byteorder",
  "ckb-error",
@@ -350,7 +350,7 @@ dependencies = [
 [[package]]
 name = "ckb-error"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "anyhow",
  "ckb-occupied-capacity",
@@ -361,7 +361,7 @@ dependencies = [
 [[package]]
 name = "ckb-fixed-hash"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-fixed-hash-core",
  "ckb-fixed-hash-macros",
@@ -370,7 +370,7 @@ dependencies = [
 [[package]]
 name = "ckb-fixed-hash-core"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "faster-hex",
  "serde",
@@ -380,7 +380,7 @@ dependencies = [
 [[package]]
 name = "ckb-fixed-hash-macros"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-fixed-hash-core",
  "proc-macro2",
@@ -391,7 +391,7 @@ dependencies = [
 [[package]]
 name = "ckb-hash"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "blake2b-ref",
  "blake2b-rs",
@@ -400,7 +400,7 @@ dependencies = [
 [[package]]
 name = "ckb-jsonrpc-types"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-types",
  "faster-hex",
@@ -427,12 +427,17 @@ dependencies = [
  "anyhow",
  "ckb-app-config",
  "ckb-async-runtime",
+ "ckb-chain-spec",
  "ckb-constant",
+ "ckb-error",
  "ckb-jsonrpc-types",
  "ckb-merkle-mountain-range",
  "ckb-network",
  "ckb-pow",
+ "ckb-resource",
  "ckb-rocksdb",
+ "ckb-script",
+ "ckb-traits",
  "ckb-types",
  "clap 2.34.0",
  "ctrlc",
@@ -448,6 +453,7 @@ dependencies = [
  "rand 0.6.5",
  "rand 0.8.5",
  "serde",
+ "serde_json",
  "tempfile",
  "thiserror",
  "toml",
@@ -456,7 +462,7 @@ dependencies = [
 [[package]]
 name = "ckb-logger"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "log",
 ]
@@ -464,7 +470,7 @@ dependencies = [
 [[package]]
 name = "ckb-logger-config"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "serde",
 ]
@@ -481,7 +487,7 @@ dependencies = [
 [[package]]
 name = "ckb-metrics-config"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "serde",
 ]
@@ -489,7 +495,7 @@ dependencies = [
 [[package]]
 name = "ckb-network"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "bloom-filters",
  "ckb-app-config",
@@ -514,7 +520,7 @@ dependencies = [
 [[package]]
 name = "ckb-occupied-capacity"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-occupied-capacity-core",
  "ckb-occupied-capacity-macros",
@@ -523,7 +529,7 @@ dependencies = [
 [[package]]
 name = "ckb-occupied-capacity-core"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "serde",
 ]
@@ -531,7 +537,7 @@ dependencies = [
 [[package]]
 name = "ckb-occupied-capacity-macros"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-occupied-capacity-core",
  "quote",
@@ -541,7 +547,7 @@ dependencies = [
 [[package]]
 name = "ckb-pow"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "byteorder",
  "ckb-hash",
@@ -554,7 +560,7 @@ dependencies = [
 [[package]]
 name = "ckb-rational"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "numext-fixed-uint",
  "serde",
@@ -563,7 +569,7 @@ dependencies = [
 [[package]]
 name = "ckb-resource"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-system-scripts",
  "ckb-types",
@@ -586,14 +592,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "ckb-script"
+version = "0.102.0-pre"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
+dependencies = [
+ "byteorder",
+ "ckb-chain-spec",
+ "ckb-error",
+ "ckb-hash",
+ "ckb-logger",
+ "ckb-traits",
+ "ckb-types",
+ "ckb-vm",
+ "ckb-vm-definitions",
+ "faster-hex",
+ "goblin 0.2.3",
+ "serde",
+]
+
+[[package]]
 name = "ckb-spawn"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 
 [[package]]
 name = "ckb-stop-handler"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-channel",
  "ckb-logger",
@@ -617,7 +642,7 @@ dependencies = [
 [[package]]
 name = "ckb-traits"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "ckb-types",
 ]
@@ -625,7 +650,7 @@ dependencies = [
 [[package]]
 name = "ckb-types"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "bit-vec",
  "bitflags",
@@ -647,13 +672,39 @@ dependencies = [
 [[package]]
 name = "ckb-util"
 version = "0.102.0-pre"
-source = "git+https://github.com/yangby-cryptape/ckb?branch=poc/light-client-nightly#834b6631ff420c62355222077f1e39af1d8300ac"
+source = "git+https://github.com/yangby-cryptape/ckb?rev=3afd7971cfc5745c8ca42b3bb1a01ee420a43e81#3afd7971cfc5745c8ca42b3bb1a01ee420a43e81"
 dependencies = [
  "linked-hash-map",
  "once_cell",
  "parking_lot 0.12.1",
  "regex",
 ]
+
+[[package]]
+name = "ckb-vm"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a33a9a7cbd7eb53af03ade3903109c207abc1eb7d13aeeb04d2dd41cfe7777c3"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "cc",
+ "ckb-vm-definitions",
+ "derive_more",
+ "goblin 0.2.3",
+ "goblin 0.4.0",
+ "libc",
+ "mapr",
+ "rand 0.7.3",
+ "scroll",
+ "serde",
+]
+
+[[package]]
+name = "ckb-vm-definitions"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59b85b56f35eb5a5d4c64b538ec4a4bf49d3335455d57755151f201bcfff74e2"
 
 [[package]]
 name = "clang-sys"
@@ -714,6 +765,12 @@ checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
 ]
+
+[[package]]
+name = "convert_case"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
 name = "cpufeatures"
@@ -798,8 +855,10 @@ version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
 dependencies = [
+ "convert_case",
  "proc-macro2",
  "quote",
+ "rustc_version",
  "syn",
 ]
 
@@ -1060,6 +1119,28 @@ dependencies = [
  "fnv",
  "log",
  "regex",
+]
+
+[[package]]
+name = "goblin"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d20fd25aa456527ce4f544271ae4fea65d2eda4a6561ea56f39fb3ee4f7e3884"
+dependencies = [
+ "log",
+ "plain",
+ "scroll",
+]
+
+[[package]]
+name = "goblin"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "532a09cd3df2c6bbfc795fb0434bff8f22255d1d07328180e918a2e6ce122d4d"
+dependencies = [
+ "log",
+ "plain",
+ "scroll",
 ]
 
 [[package]]
@@ -1375,6 +1456,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "mapr"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46a28a55dbc005b2f6f123c4058933d57add373d362f6fd3a76aab4fe6973500"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -1710,6 +1801,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
+name = "plain"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
+
+[[package]]
 name = "poly1305"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2006,6 +2103,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
+name = "rustc_version"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
+dependencies = [
+ "semver",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2027,6 +2133,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
+name = "scroll"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fda28d4b4830b807a8b43f7b0e6b5df875311b3e7621d84577188c175b6ec1ec"
+dependencies = [
+ "scroll_derive",
+]
+
+[[package]]
+name = "scroll_derive"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aaaae8f38bb311444cfb7f1979af0bc9240d95795f75f9ceddf6a59b79ceffa0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "secp256k1"
 version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2043,6 +2169,12 @@ checksum = "957da2573cde917463ece3570eab4a0b3f19de6f1646cde62e6fd3868f566036"
 dependencies = [
  "cc",
 ]
+
+[[package]]
+name = "semver"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a41d061efea015927ac527063765e73601444cdc344ba855bc7bd44578b25e1c"
 
 [[package]]
 name = "serde"

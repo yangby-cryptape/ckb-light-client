@@ -9,13 +9,18 @@ homepage = "https://github.com/yangby-cryptape/ckb-light-client"
 repository = "https://github.com/yangby-cryptape/ckb-light-client"
 
 [dependencies]
-ckb-app-config    = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-async-runtime = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-constant      = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-types         = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-network       = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-jsonrpc-types = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
-ckb-pow           = { git="https://github.com/yangby-cryptape/ckb", branch="poc/light-client-nightly" }
+ckb-app-config    = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-async-runtime = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-constant      = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-types         = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-network       = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-jsonrpc-types = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-pow           = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-error         = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-script        = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-chain-spec    = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-traits        = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
+ckb-resource      = { git="https://github.com/yangby-cryptape/ckb", rev = "3afd7971cfc5745c8ca42b3bb1a01ee420a43e81" }
 ckb-merkle-mountain-range = "0.4.0"
 golomb-coded-set = { git = "https://github.com/TheWaWaR/golomb-coded-set"}
 rocksdb = { package = "ckb-rocksdb", version ="=0.16.1", features = ["snappy"] }
@@ -38,6 +43,7 @@ jsonrpc-server-utils = "18.0"
 [dev-dependencies]
 tempfile = "3.0"
 rand = "0.6"
+serde_json = "1.0"
 
 [badges]
 maintenance = { status = "experimental" }
