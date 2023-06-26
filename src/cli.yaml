@@ -10,3 +10,14 @@ subcommands:
             long: config-file
             takes_value: true
             required: true
+        - trusted-hash:
+            help: |
+                A trusted hash.
+                If a CKB full node returns a chain without any block whose
+                hash is this trusted hash, it will be banned.
+                If there already has some data, then light client rollback
+                the data to the block whose hash is this trusted hash before
+                synchronizing.
+            long: trusted-hash
+            takes_value: true
+            required: false

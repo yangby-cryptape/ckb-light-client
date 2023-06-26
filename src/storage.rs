@@ -215,6 +215,14 @@ impl Storage {
             .build()
     }
 
+    pub fn get_genesis_hash(&self) -> packed::Byte32 {
+        let genesis_hash_and_txs_hash = self
+            .get(Key::Meta(GENESIS_BLOCK_KEY).into_vec())
+            .expect("get genesis block")
+            .expect("inited storage");
+        Byte32::from_slice(&genesis_hash_and_txs_hash[0..32]).expect("stored genesis block hash")
+    }
+
     pub fn is_filter_scripts_empty(&self) -> bool {
         let key_prefix = Key::Meta(FILTER_SCRIPTS_KEY).into_vec();
         let mode = IteratorMode::From(key_prefix.as_ref(), Direction::Forward);

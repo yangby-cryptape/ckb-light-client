@@ -1,5 +1,7 @@
 use std::{convert::TryFrom, fmt::Display, fs::OpenOptions, io::Read as _, str::FromStr};
 
+use ckb_types::{packed, prelude::*, H256};
+
 use crate::{
     error::{Error, Result},
     types::RunEnv,
@@ -11,6 +13,7 @@ pub(crate) enum AppConfig {
 
 pub(crate) struct RunConfig {
     pub(crate) run_env: RunEnv,
+    pub(crate) trusted_hash_opt: Option<packed::Byte32>,
 }
 
 impl AppConfig {
@@ -46,8 +49,22 @@ impl<'a> TryFrom<&'a clap::ArgMatches<'a>> for RunConfig {
     type Error = Error;
     fn try_from(matches: &'a clap::ArgMatches) -> Result<Self> {
         let run_env = parse_from_file::<RunEnv>(matches, "config-file")?;
-        Ok(Self { run_env })
+        let trusted_hash_opt = parse_option::<H256>(matches, "trusted-hash")?.map(|h| h.pack());
+        Ok(Self {
+            run_env,
+            trusted_hash_opt,
+        })
     }
+}
+
+fn parse_option<T: FromStr>(matches: &clap::ArgMatches, name: &str) -> Result<Option<T>>
+where
+    <T as FromStr>::Err: Display,
+{
+    matches
+        .value_of(name)
+        .map(|data| T::from_str(&data).map_err(Error::config))
+        .transpose()
 }
 
 fn parse_from_file<T: FromStr>(matches: &clap::ArgMatches, name: &str) -> Result<T>

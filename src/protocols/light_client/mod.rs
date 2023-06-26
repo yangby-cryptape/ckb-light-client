@@ -34,7 +34,9 @@ pub(crate) use self::peers::FetchInfo;
 
 use prelude::*;
 
-pub(crate) use self::peers::{LastState, Peer, PeerState, Peers, ProveRequest, ProveState};
+pub(crate) use self::peers::{
+    LastState, Peer, PeerState, Peers, ProveRequest, ProveRequestForTrustedState, ProveState,
+};
 use super::{
     status::{Status, StatusCode},
     BAD_MESSAGE_BAN_TIME,
@@ -51,6 +53,7 @@ pub struct LightClientProtocol {
     mmr_activated_epoch: EpochNumber,
     last_n_blocks: BlockNumber,
     init_blocks_in_transit_per_peer: usize,
+    trusted_hash_opt: Option<packed::Byte32>,
 }
 
 #[async_trait]
@@ -84,12 +87,26 @@ impl CKBProtocolHandler for LightClientProtocol {
         version: &str,
     ) {
         info!("LightClient({}).connected peer={}", version, peer_index);
-        self.peers().add_peer(peer_index);
-        if let Err(err) = self.get_last_state(nc.as_ref(), peer_index) {
-            error!(
-                "failed to request last state from peer={} since {}",
-                peer_index, err
-            );
+        if let Some(ref trusted_hash) = self.trusted_hash_opt {
+            self.peers()
+                .add_peer_with_trusted_hash(peer_index, trusted_hash.clone());
+            if let Err(err) =
+                self.get_proof_for_trusted_state(nc.as_ref(), peer_index, trusted_hash)
+            {
+                error!(
+                    "failed to request proof for trusted state \
+                    (hash: {:#x}) from peer={} since {}",
+                    trusted_hash, peer_index, err
+                );
+            }
+        } else {
+            self.peers().add_peer(peer_index);
+            if let Err(err) = self.get_last_state(nc.as_ref(), peer_index) {
+                error!(
+                    "failed to request last state from peer={} since {}",
+                    peer_index, err
+                );
+            }
         }
     }
 
@@ -246,6 +263,53 @@ impl LightClientProtocol {
             }
         } else {
             warn!("peer {}: no last state for building request", peer_index);
+            Ok(false)
+        }
+    }
+
+    // ### Do NOT copied state from other peers!
+    //
+    // When light client requests the last state proof, the last state was sent from that peer.
+    // But the trusted state is provided by users, so light client has to make sure whether the
+    // peer has our trusted hash.
+    fn get_proof_for_trusted_state(
+        &self,
+        nc: &dyn CKBProtocolContext,
+        peer_index: PeerIndex,
+        trusted_hash: &packed::Byte32,
+    ) -> Result<bool, Status> {
+        let peer_state = self
+            .peers()
+            .get_state(&peer_index)
+            .expect("checked: should have state");
+
+        // Check state before send the request.
+        let not_requested = peer_state.is_with_trusted_state();
+        if !not_requested {
+            return Ok(false);
+        }
+
+        if let Some(content) =
+            self.build_prove_request_content_for_trusted_state_from_genesis(trusted_hash)
+        {
+            trace!(
+                "peer {}: send get last state proof for trusted state (hash :{:#x})",
+                peer_index,
+                trusted_hash
+            );
+            let message = packed::LightClientMessage::new_builder()
+                .set(content.clone())
+                .build();
+            nc.reply(peer_index, &message);
+            let prove_request = ProveRequestForTrustedState::new(trusted_hash.clone(), content);
+            self.peers()
+                .update_prove_request_for_trusted_state(peer_index, prove_request)?;
+            Ok(true)
+        } else {
+            warn!(
+                "peer {}: build prove request for trusted state (hash :{:#x}) failed",
+                peer_index, trusted_hash
+            );
             Ok(false)
         }
     }
@@ -407,7 +471,12 @@ impl LightClientProtocol {
 }
 
 impl LightClientProtocol {
-    pub(crate) fn new(storage: Storage, peers: Arc<Peers>, consensus: Consensus) -> Self {
+    pub(crate) fn new(
+        storage: Storage,
+        peers: Arc<Peers>,
+        consensus: Consensus,
+        trusted_hash_opt: Option<packed::Byte32>,
+    ) -> Self {
         // TODO remove this hard code when mmr is activated on testnet
         let mmr_activated_epoch = if consensus.is_public_chain() {
             EpochNumber::MAX
@@ -421,6 +490,7 @@ impl LightClientProtocol {
             mmr_activated_epoch,
             last_n_blocks: LAST_N_BLOCKS,
             init_blocks_in_transit_per_peer: INIT_BLOCKS_IN_TRANSIT_PER_PEER,
+            trusted_hash_opt,
         }
     }
 
@@ -869,6 +939,25 @@ impl LightClientProtocol {
         Some(content)
     }
 
+    // Since light client trust the state, the sampling could be skipped.
+    //
+    // p.s. In fact, light client could NOT get the number and total difficulty.
+    pub(crate) fn build_prove_request_content_for_trusted_state_from_genesis(
+        &self,
+        trusted_hash: &packed::Byte32,
+    ) -> Option<packed::GetLastStateProof> {
+        let last_n_blocks = self.last_n_blocks();
+        let start_hash = self.storage.get_genesis_hash();
+        let content = packed::GetLastStateProof::new_builder()
+            .last_hash(trusted_hash.clone())
+            .start_hash(start_hash)
+            .start_number(0u64.pack())
+            .last_n_blocks(last_n_blocks.pack())
+            .difficulty_boundary(U256::max_value().pack())
+            .build();
+        Some(content)
+    }
+
     pub(crate) fn build_prove_request_content_from_genesis(
         &self,
         last_header: &VerifiableHeader,
@@ -877,8 +966,8 @@ impl LightClientProtocol {
         let last_number = last_header.header().number();
         let last_total_difficulty = last_header.total_difficulty();
         let (start_hash, start_number, start_total_difficulty) = {
-            let genesis = self.storage.get_genesis_block();
-            (genesis.calc_header_hash(), 0, U256::zero())
+            let genesis_hash = self.storage.get_genesis_hash();
+            (genesis_hash, 0, U256::zero())
         };
         if start_total_difficulty > last_total_difficulty || start_number >= last_number {
             return None;

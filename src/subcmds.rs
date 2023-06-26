@@ -71,6 +71,7 @@ impl RunConfig {
             storage.clone(),
             Arc::clone(&peers),
             consensus.clone(),
+            self.trusted_hash_opt,
         ));
         let filter_protocol = FilterProtocol::new(storage.clone(), Arc::clone(&peers));
 

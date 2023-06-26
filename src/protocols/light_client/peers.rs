@@ -76,18 +76,23 @@ pub(crate) struct LastState {
  * ```plantuml
  * @startuml
  * state "Initialized"                as st1
+ * state "WithTrustedState"           as st1a
  * state "RequestFirstLastState"      as st2
  * state "OnlyHasLastState"           as st3
  * state "RequestFirstLastStateProof" as st4
+ * state "RequestTrustedStateProof"   as st4a
  * state "Ready"                      as st5
  * state "RequestNewLastState"        as st6
  * state "RequestNewLastStateProof"   as st7
  *
- * [*] ->   st1 : Connect Peer
+ * [*] ->   st1 : Connect Peer without Trusted Hash
+ * [*] ->   st1a: Connect Peer with    Trusted Hash
  * st1 ->   st2 : Send    GetLastState
  * st2 -D-> st3 : Receive SendLastState
+ * st1a->   st4a: Send    GetLastStateProof
  * st3 ->   st4 : Send    GetLastStateProof
  * st4 ->   st5 : Receive SendLastStateProof
+ * st4a->   st5 : Receive SendLastStateProof
  * st5 -U-> st6 : Send    GetLastState
  * st6 ->   st5 : Receive SendLastState
  * st5 -D-> st7 : Send    GetLastStateProof
@@ -98,6 +103,9 @@ pub(crate) struct LastState {
 #[derive(Clone)]
 pub(crate) enum PeerState {
     Initialized,
+    WithTrustedState {
+        trusted_hash: packed::Byte32,
+    },
     RequestFirstLastState {
         when_sent: u64,
     },
@@ -107,6 +115,10 @@ pub(crate) enum PeerState {
     RequestFirstLastStateProof {
         last_state: LastState,
         request: ProveRequest,
+        when_sent: u64,
+    },
+    RequestTrustedStateProof {
+        request: ProveRequestForTrustedState,
         when_sent: u64,
     },
     Ready {
@@ -132,6 +144,12 @@ pub(crate) struct ProveRequest {
     content: packed::GetLastStateProof,
     skip_check_tau: bool,
     long_fork_detected: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct ProveRequestForTrustedState {
+    trusted_hash: packed::Byte32,
+    content: packed::GetLastStateProof,
 }
 
 #[derive(Clone)]
@@ -255,16 +273,26 @@ impl fmt::Display for ProveRequest {
         if f.alternate() {
             write!(
                 f,
-                "LastState {{ last_state: {:#}, tau: {}, fork: {} }}",
+                "ProveRequest {{ last_state: {:#}, tau: {}, fork: {} }}",
                 self.last_state, tau_status, self.long_fork_detected,
             )
         } else {
             write!(
                 f,
-                "{} (tau: {}, fork: {})",
+                "ProveRequest {{ last_state: {}, tau: {}, fork: {} }}",
                 self.last_state, tau_status, self.long_fork_detected,
             )
         }
+    }
+}
+
+impl fmt::Display for ProveRequestForTrustedState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "ProveRequestForTrustedState {{ trusted_hash: {:#x} }}",
+            self.trusted_hash
+        )
     }
 }
 
@@ -304,6 +332,28 @@ impl ProveRequest {
 
     pub(crate) fn long_fork_detected(&mut self) {
         self.long_fork_detected = true;
+    }
+}
+
+impl ProveRequestForTrustedState {
+    pub(crate) fn new(trusted_hash: packed::Byte32, content: packed::GetLastStateProof) -> Self {
+        Self {
+            trusted_hash,
+            content,
+        }
+    }
+
+    pub(crate) fn get_trusted_hash(&self) -> &packed::Byte32 {
+        &self.trusted_hash
+    }
+
+    pub(crate) fn complete(&self, header: VerifiableHeader) -> ProveRequest {
+        ProveRequest {
+            last_state: LastState::new(header),
+            content: self.content.clone(),
+            skip_check_tau: true,
+            long_fork_detected: false,
+        }
     }
 }
 
@@ -754,6 +804,9 @@ impl fmt::Display for PeerState {
                 Self::Initialized => {
                     write!(f, "{}", fullname)
                 }
+                Self::WithTrustedState { trusted_hash } => {
+                    write!(f, "{} {{ trusted_hash: {:#x} }}", fullname, trusted_hash)
+                }
                 Self::RequestFirstLastState { when_sent } => {
                     write!(f, "{} {{ when_sent: {} }}", fullname, when_sent)
                 }
@@ -767,6 +820,11 @@ impl fmt::Display for PeerState {
                 } => {
                     write!(f, "{} {{ last_state: {}", fullname, last_state)?;
                     write!(f, ", request: {}", request)?;
+                    write!(f, ", when_sent: {}", when_sent)?;
+                    write!(f, "}}")
+                }
+                Self::RequestTrustedStateProof { request, when_sent } => {
+                    write!(f, "{} {{ request: {}", fullname, request)?;
                     write!(f, ", when_sent: {}", when_sent)?;
                     write!(f, "}}")
                 }
@@ -806,6 +864,16 @@ impl fmt::Display for PeerState {
                 Self::Initialized | Self::RequestFirstLastState { .. } => {
                     write!(f, "{}", fullname)
                 }
+                Self::WithTrustedState { trusted_hash } => {
+                    write!(f, "{} {{ trusted_hash: {:#x} }}", fullname, trusted_hash)
+                }
+                Self::RequestTrustedStateProof { request, .. } => {
+                    write!(
+                        f,
+                        "{} {{ trusted_hash: {:#x} }}",
+                        fullname, request.trusted_hash
+                    )
+                }
                 Self::OnlyHasLastState { last_state, .. }
                 | Self::RequestFirstLastStateProof { last_state, .. }
                 | Self::Ready { last_state, .. }
@@ -822,9 +890,11 @@ impl PeerState {
     fn name(&self) -> &'static str {
         match self {
             Self::Initialized => "Initialized",
+            Self::WithTrustedState { .. } => "WithTrustedState",
             Self::RequestFirstLastState { .. } => "RequestFirstLastState",
             Self::OnlyHasLastState { .. } => "OnlyHasLastState",
             Self::RequestFirstLastStateProof { .. } => "RequestFirstLastStateProof",
+            Self::RequestTrustedStateProof { .. } => "RequestTrustedStateProof",
             Self::Ready { .. } => "Ready",
             Self::RequestNewLastState { .. } => "RequestNewLastState",
             Self::RequestNewLastStateProof { .. } => "RequestNewLastStateProof",
@@ -839,7 +909,10 @@ impl PeerState {
 
     pub(crate) fn get_last_state(&self) -> Option<&LastState> {
         match self {
-            Self::Initialized | Self::RequestFirstLastState { .. } => None,
+            Self::Initialized
+            | Self::WithTrustedState { .. }
+            | Self::RequestFirstLastState { .. }
+            | Self::RequestTrustedStateProof { .. } => None,
             Self::OnlyHasLastState { ref last_state, .. }
             | Self::RequestFirstLastStateProof { ref last_state, .. }
             | Self::Ready { ref last_state, .. }
@@ -853,10 +926,22 @@ impl PeerState {
             Self::RequestFirstLastStateProof { ref request, .. }
             | Self::RequestNewLastStateProof { ref request, .. } => Some(request),
             Self::Initialized
+            | Self::WithTrustedState { .. }
             | Self::OnlyHasLastState { .. }
             | Self::RequestFirstLastState { .. }
+            | Self::RequestTrustedStateProof { .. }
             | Self::Ready { .. }
             | Self::RequestNewLastState { .. } => None,
+        }
+    }
+
+    pub(crate) fn get_prove_request_for_trusted_state(
+        &self,
+    ) -> Option<&ProveRequestForTrustedState> {
+        if let Self::RequestTrustedStateProof { ref request, .. } = self {
+            Some(request)
+        } else {
+            None
         }
     }
 
@@ -872,10 +957,16 @@ impl PeerState {
                 ref prove_state, ..
             } => Some(prove_state),
             Self::Initialized
+            | Self::WithTrustedState { .. }
             | Self::RequestFirstLastState { .. }
             | Self::OnlyHasLastState { .. }
-            | Self::RequestFirstLastStateProof { .. } => None,
+            | Self::RequestFirstLastStateProof { .. }
+            | Self::RequestTrustedStateProof { .. } => None,
         }
+    }
+
+    pub(crate) fn is_with_trusted_state(&self) -> bool {
+        matches!(self, Self::WithTrustedState { .. })
     }
 
     fn request_last_state(self, when_sent: u64) -> Result<Self, Status> {
@@ -985,6 +1076,26 @@ impl PeerState {
         }
     }
 
+    fn request_trusted_state_proof(
+        self,
+        new_request: ProveRequestForTrustedState,
+        new_when_sent: u64,
+    ) -> Result<Self, Status> {
+        match self {
+            Self::WithTrustedState { .. } => {
+                let new_state = Self::RequestTrustedStateProof {
+                    request: new_request,
+                    when_sent: new_when_sent,
+                };
+                Ok(new_state)
+            }
+            _ => {
+                let errmsg = format!("{} request trusted state proof", self);
+                Err(StatusCode::IncorrectLastState.with_context(errmsg))
+            }
+        }
+    }
+
     fn receive_last_state_proof(self, new_prove_state: ProveState) -> Result<Self, Status> {
         match self {
             Self::OnlyHasLastState { last_state }
@@ -1008,9 +1119,11 @@ impl PeerState {
         match self {
             Self::Initialized => true,
             Self::Ready { ref last_state, .. } => last_state.update_ts < before_ts,
-            Self::OnlyHasLastState { .. }
+            Self::WithTrustedState { .. }
+            | Self::OnlyHasLastState { .. }
             | Self::RequestFirstLastState { .. }
             | Self::RequestFirstLastStateProof { .. }
+            | Self::RequestTrustedStateProof { .. }
             | Self::RequestNewLastState { .. }
             | Self::RequestNewLastStateProof { .. } => false,
         }
@@ -1022,10 +1135,11 @@ impl PeerState {
                 ref last_state,
                 ref prove_state,
             } => !prove_state.is_same_as(last_state.as_ref()),
-            Self::OnlyHasLastState { .. } => true,
+            Self::WithTrustedState { .. } | Self::OnlyHasLastState { .. } => true,
             Self::Initialized
             | Self::RequestFirstLastState { .. }
             | Self::RequestFirstLastStateProof { .. }
+            | Self::RequestTrustedStateProof { .. }
             | Self::RequestNewLastState { .. }
             | Self::RequestNewLastStateProof { .. } => false,
         }
@@ -1033,9 +1147,13 @@ impl PeerState {
 
     fn when_sent_request(&self) -> Option<u64> {
         match self {
-            Self::Initialized | Self::OnlyHasLastState { .. } | Self::Ready { .. } => None,
+            Self::Initialized
+            | Self::WithTrustedState { .. }
+            | Self::OnlyHasLastState { .. }
+            | Self::Ready { .. } => None,
             Self::RequestFirstLastState { when_sent }
             | Self::RequestFirstLastStateProof { when_sent, .. }
+            | Self::RequestTrustedStateProof { when_sent, .. }
             | Self::RequestNewLastState { when_sent, .. }
             | Self::RequestNewLastStateProof { when_sent, .. } => Some(*when_sent),
         }
@@ -1043,7 +1161,11 @@ impl PeerState {
 }
 
 impl Peer {
-    fn new(check_point_interval: BlockNumber, start_check_point: (u32, packed::Byte32)) -> Self {
+    fn new(
+        check_point_interval: BlockNumber,
+        start_check_point: (u32, packed::Byte32),
+        trusted_hash_opt: Option<packed::Byte32>,
+    ) -> Self {
         let check_points = CheckPoints::new(
             check_point_interval,
             start_check_point.0,
@@ -1051,8 +1173,11 @@ impl Peer {
         );
         let check_point_number = check_point_interval * BlockNumber::from(start_check_point.0);
         let latest_block_filter_hashes = LatestBlockFilterHashes::new(check_point_number);
+        let state = trusted_hash_opt
+            .map(|trusted_hash| PeerState::WithTrustedState { trusted_hash })
+            .unwrap_or_default();
         Self {
-            state: Default::default(),
+            state,
             blocks_proof_request: None,
             blocks_request: None,
             txs_proof_request: None,
@@ -1223,7 +1348,24 @@ impl Peers {
     }
 
     pub(crate) fn add_peer(&self, index: PeerIndex) {
-        let peer = Peer::new(self.check_point_interval, self.start_check_point.clone());
+        let peer = Peer::new(
+            self.check_point_interval,
+            self.start_check_point.clone(),
+            None,
+        );
+        self.inner.insert(index, peer);
+    }
+
+    pub(crate) fn add_peer_with_trusted_hash(
+        &self,
+        index: PeerIndex,
+        trusted_hash: packed::Byte32,
+    ) {
+        let peer = Peer::new(
+            self.check_point_interval,
+            self.start_check_point.clone(),
+            Some(trusted_hash),
+        );
         self.inner.insert(index, peer);
     }
 
@@ -1300,6 +1442,21 @@ impl Peers {
         if let Some(mut peer) = self.inner.get_mut(&index) {
             let now = unix_time_as_millis();
             peer.state = peer.state.take().request_last_state_proof(request, now)?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn update_prove_request_for_trusted_state(
+        &self,
+        index: PeerIndex,
+        request: ProveRequestForTrustedState,
+    ) -> Result<(), Status> {
+        if let Some(mut peer) = self.inner.get_mut(&index) {
+            let now = unix_time_as_millis();
+            peer.state = peer
+                .state
+                .take()
+                .request_trusted_state_proof(request, now)?;
         }
         Ok(())
     }

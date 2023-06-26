@@ -44,17 +44,35 @@ impl<'a> SendLastStateProofProcess<'a> {
     pub(crate) fn execute(self) -> Status {
         let peer_state = return_if_failed!(self.protocol.get_peer_state(&self.peer_index));
 
-        let original_request = if let Some(original_request) = peer_state.get_prove_request() {
-            original_request
+        let last_header: VerifiableHeader = self.message.last_header().to_entity().into();
+
+        let (original_request, is_trusted_state) = if let Some(original_request) =
+            peer_state.get_prove_request()
+        {
+            (original_request.clone(), false)
+        } else if let Some(original_request) = peer_state.get_prove_request_for_trusted_state() {
+            return_if_failed!(self.protocol.check_verifiable_header(&last_header));
+            if last_header.header().hash() == *original_request.get_trusted_hash() {
+                (original_request.complete(last_header.clone()), true)
+            } else {
+                let errmsg = format!(
+                    "trusted state is {:#x} but got {:#x}",
+                    last_header.header().hash(),
+                    original_request.get_trusted_hash()
+                );
+                warn!(
+                    "peer {} send an untrusted state, {}",
+                    self.peer_index, errmsg
+                );
+                return StatusCode::NotTrustedState.with_context(errmsg);
+            }
         } else {
             warn!("peer {} isn't waiting for a proof", self.peer_index);
             return Status::ok();
         };
 
-        let last_header: VerifiableHeader = self.message.last_header().to_entity().into();
-
         // Update the last state if the response contains a new one.
-        if !original_request.is_same_as(&last_header) {
+        if !is_trusted_state && !original_request.is_same_as(&last_header) {
             if self.message.proof().is_empty() {
                 return_if_failed!(self
                     .protocol
@@ -280,6 +298,9 @@ impl<'a> SendLastStateProofProcess<'a> {
                 .commit_prove_state(self.peer_index, prove_state.clone()));
 
             if long_fork_detected {
+                // Should NOT reach here if the client is waiting for a trusted state proof,
+                // since the start number is 0.
+                assert!(!is_trusted_state);
                 let last_header = prove_state.get_last_header();
                 if let Some(content) = self
                     .protocol

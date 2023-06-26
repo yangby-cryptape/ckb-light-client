@@ -39,6 +39,8 @@ pub enum StatusCode {
     PeerIsNotOnProcess = 421,
     /// The response is not match our request.
     UnexpectedResponse = 422,
+    /// Expect proof for a trusted state but got another.
+    NotTrustedState = 423,
 
     // Common errors for all verifications.
     /// Failed to verify chain root.
