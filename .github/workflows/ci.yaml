@@ -63,12 +63,16 @@ jobs:
         scoop install llvm yasm
     - name: Build
       run: cargo build
-    - if: matrix.os != 'macos-latest'
+    - if: matrix.os == 'ubuntu-latest'
       name: UnitTest
       run: cargo test
     - if: matrix.os == 'macos-latest'
       name: UnitTest
       run: cargo test --features portable
+    - if: matrix.os == 'windows-2019'
+      name: UnitTest
+      # Fix STATUS_STACK_BUFFER_OVERRUN: memory allocation of xxxxxxx bytes failed
+      run: cargo test -- --test-threads 1
   code_coverage:
     name: Code Coverage
     needs: [ test ]
