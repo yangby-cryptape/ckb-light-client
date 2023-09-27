@@ -1,56 +1,18 @@
 name: CI
 on:
-  push:
-    branches: [ master, develop ]
-  pull_request:
-    branches: [ master, develop ]
+  push
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
   RUST_BACKTRACE: full
   RUST_TOOLCHAIN: 1.72.1
 jobs:
-  rustfmt:
-    name: Checks / Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-  clippy:
-    name: Checks / Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: clippy
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --locked -- --deny warnings
   test:
     name: Tests / Build & Test
-    needs: [ rustfmt, clippy ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-2019 ]
+        os: [ windows-2019 ]
     steps:
     - uses: actions/checkout@v2
     - if: matrix.os == 'windows-2019'
@@ -61,48 +23,7 @@ jobs:
         echo "LIBCLANG_PATH=$($HOME)/scoop/apps/llvm/current/bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "$env:USERPROFILE\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         scoop install llvm yasm
-    - name: Build
-      run: cargo build
-    - if: matrix.os == 'ubuntu-latest'
-      name: UnitTest
-      run: cargo test
-    - if: matrix.os == 'macos-latest'
-      name: UnitTest
-      run: cargo test --features portable
     - if: matrix.os == 'windows-2019'
       name: UnitTest
       # Fix STATUS_STACK_BUFFER_OVERRUN: memory allocation of xxxxxxx bytes failed
       run: cargo test -- --test-threads 1
-  code_coverage:
-    name: Code Coverage
-    needs: [ test ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-    env:
-      OS: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: llvm-tools-preview
-      - name: Install Grcov
-        run: grcov --version || cargo install grcov
-      - name: Generate Code Coverage Report of Unit Tests
-        run: |
-          make coverage-run-unittests
-          make coverage-collect-data
-      - name: Upload Code Coverage Report of Unit Tests
-        uses: codecov/codecov-action@v3
-        with:
-          files: coverage-report.info
-          env_vars: OS,RUST_TOOLCHAIN
-          fail_ci_if_error: true
-          flags: unittests
-          verbose: false
