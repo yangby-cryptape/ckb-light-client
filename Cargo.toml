@@ -1,6 +1,6 @@
 [package]
 name = "ckb-light-client"
-version = "0.3.6"
+version = "0.3.7"
 authors = ["Nervos Core Dev <dev@nervos.org>"]
 edition = "2021"
 license = "MIT"
@@ -25,7 +25,7 @@ ckb-verification  = "0.113.0"
 ckb-systemtime    = "0.113.0"
 ckb-hash          = "0.113.0"
 ckb-merkle-mountain-range = "0.5.1"
-golomb-coded-set = "0.2.0"
+golomb-coded-set = "0.2.1"
 rocksdb = { package = "ckb-rocksdb", version ="=0.21.1", features = ["snappy"], default-features = false }
 numext-fixed-uint = { version = "0.1", features = ["support_rand", "support_heapsize", "support_serde"] }
 anyhow = "1.0.56"
