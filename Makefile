@@ -16,7 +16,7 @@ coverage-clean:
 
 coverage-install-tools:
 	rustup component add llvm-tools-preview
-	grcov --version || cargo install grcov
+	grcov --version || cargo install --locked grcov
 
 coverage-run-unittests:
 	mkdir -p "${COVERAGE_PROFRAW_DIR}"
