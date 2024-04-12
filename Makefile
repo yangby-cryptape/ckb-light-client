@@ -5,6 +5,15 @@ GRCOV_EXCL_START = ^\s*((log::)?(trace|debug|info|warn|error)|(debug_)?assert(_e
 GRCOV_EXCL_STOP  = ^\s*\)(;)?$$
 GRCOV_EXCL_LINE = \s*((log::)?(trace|debug|info|warn|error)|(debug_)?assert(_eq|_ne|_error_eq))!\(.*\)(;)?$$
 
+fmt:
+	cargo fmt --all --check
+
+clippy:
+	cargo clippy --workspace --locked -- --deny warnings
+
+build:
+	cargo build
+
 test:
 	cargo nextest run --hide-progress-bar --success-output immediate --failure-output immediate
 
