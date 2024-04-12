@@ -341,6 +341,11 @@ impl Storage {
                 if scripts.is_empty() {
                     return;
                 }
+
+                let mut stored_scripts = self.get_filter_scripts();
+                stored_scripts.retain(|ss| scripts.iter().all(|s| s.script != ss.script));
+                min_block_number = stored_scripts.iter().map(|ss| ss.block_number).min();
+
                 for ss in scripts {
                     let key = [
                         key_prefix.as_ref(),
