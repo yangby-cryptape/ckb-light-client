@@ -6,6 +6,8 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
   RUST_TOOLCHAIN: 1.72.1
+permissions:
+  contents: write
 jobs:
   release:
     name: Build & Release
