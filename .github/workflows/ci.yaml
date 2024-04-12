@@ -14,36 +14,26 @@ jobs:
     name: Checks / Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        run: |
+          rustup toolchain install ${{ env.RUST_TOOLCHAIN }} --profile minimal --component rustfmt
+          rustup override set ${{ env.RUST_TOOLCHAIN }}
+      - name: Format Check
+        run: make fmt
   clippy:
     name: Checks / Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: clippy
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --locked -- --deny warnings
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        run: |
+          rustup toolchain install ${{ env.RUST_TOOLCHAIN }} --profile minimal --component clippy
+          rustup override set ${{ env.RUST_TOOLCHAIN }}
+      - name: Lint Check
+        run: make clippy
   test:
     name: Tests / Build & Test
     needs: [ rustfmt, clippy ]
@@ -52,24 +42,26 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-2019 ]
     steps:
-    - uses: actions/checkout@v2
-    - uses: taiki-e/install-action@nextest
-    - if: matrix.os == 'windows-2019'
-      name: Windows Dependencies
-      run: |
-        iwr -useb get.scoop.sh -outfile 'install-scoop.ps1'
-        .\install-scoop.ps1 -RunAsAdmin
-        echo "LIBCLANG_PATH=$($HOME)/scoop/apps/llvm/current/bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "$env:USERPROFILE\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        scoop install llvm yasm
-    - name: Build
-      run: cargo build
-    - if: matrix.os != 'macos-latest'
-      name: UnitTest
-      run: make test
-    - if: matrix.os == 'macos-latest'
-      name: UnitTest
-      run: make test-portable
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+      - name: Windows Dependencies
+        if: matrix.os == 'windows-2019'
+        run: |
+          iwr -useb get.scoop.sh -outfile 'install-scoop.ps1'
+          .\install-scoop.ps1 -RunAsAdmin
+          echo "LIBCLANG_PATH=$($HOME)/scoop/apps/llvm/current/bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$env:USERPROFILE\scoop\shims" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          scoop install llvm yasm
+      - name: Build
+        run: make build
+      - name: UnitTest
+        if: matrix.os != 'macos-latest'
+        run: make test
+      - name: UnitTest
+        if: matrix.os == 'macos-latest'
+        run: make test-portable
   code_coverage:
     name: Code Coverage
     needs: [ test ]
@@ -80,17 +72,14 @@ jobs:
     env:
       OS: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          override: true
-          components: llvm-tools-preview
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        run: |
+          rustup toolchain install ${{ env.RUST_TOOLCHAIN }} --profile minimal
+          rustup override set ${{ env.RUST_TOOLCHAIN }}
       - name: Install Grcov
-        run: grcov --version || cargo install --locked grcov
+        run: make coverage-install-tools
       - name: Generate Code Coverage Report of Unit Tests
         run: |
           make coverage-run-unittests

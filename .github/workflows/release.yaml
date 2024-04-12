@@ -30,12 +30,12 @@ jobs:
             bin_suffix: .exe
             pkg_suffix: x86_64-windows
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: ${{ env.RUST_TOOLCHAIN }}
-        override: true
+    - name: Checkout the Repository
+      uses: actions/checkout@v4
+    - name: Install Rust Toolchain
+      run: |
+        rustup toolchain install ${{ env.RUST_TOOLCHAIN }} --profile minimal
+        rustup override set ${{ env.RUST_TOOLCHAIN }}
     - if: matrix.os == 'windows-2019'
       name: Windows Dependencies
       run: |
@@ -81,7 +81,7 @@ jobs:
     - name: Get the Version
       id: get_version
       shell: bash
-      run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+      run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
     - id: get_package
       name: Package
       shell: bash
@@ -89,7 +89,7 @@ jobs:
         pkgname="ckb-light-client_${{ steps.get_version.outputs.VERSION }}-${{ matrix.pkg_suffix }}.tar.gz"
         cp "target/release/ckb-light-client${{ matrix.bin_suffix }}" "ckb-light-client${{ matrix.bin_suffix }}"
         tar czvf "${pkgname}" "ckb-light-client${{ matrix.bin_suffix }}" "config"
-        echo ::set-output name=PKGNAME::${pkgname}
+        echo "PKGNAME=${pkgname}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       env:
