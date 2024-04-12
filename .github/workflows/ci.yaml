@@ -90,7 +90,7 @@ jobs:
           override: true
           components: llvm-tools-preview
       - name: Install Grcov
-        run: grcov --version || cargo install grcov
+        run: grcov --version || cargo install --locked grcov
       - name: Generate Code Coverage Report of Unit Tests
         run: |
           make coverage-run-unittests
@@ -100,6 +100,7 @@ jobs:
         with:
           files: coverage-report.info
           env_vars: OS,RUST_TOOLCHAIN
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: unittests
           verbose: false
+          token: ${{ secrets.CODECOV_TOKEN }}
