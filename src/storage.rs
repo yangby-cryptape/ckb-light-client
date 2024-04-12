@@ -271,7 +271,6 @@ impl Storage {
 
     pub fn update_filter_scripts(&self, scripts: Vec<ScriptStatus>, command: SetScriptsCommand) {
         let mut should_filter_genesis_block = false;
-        let mut min_block_number = None;
         let mut batch = self.batch();
         let key_prefix = Key::Meta(FILTER_SCRIPTS_KEY).into_vec();
 
@@ -288,13 +287,6 @@ impl Storage {
                     });
 
                 for ss in scripts {
-                    if min_block_number
-                        .as_ref()
-                        .map(|n| *n > ss.block_number)
-                        .unwrap_or(true)
-                    {
-                        min_block_number = Some(ss.block_number);
-                    }
                     let key = [
                         key_prefix.as_ref(),
                         ss.script.as_slice(),
@@ -315,12 +307,6 @@ impl Storage {
                 }
                 let min_script_block_number = scripts.iter().map(|ss| ss.block_number).min();
                 should_filter_genesis_block = min_script_block_number == Some(0);
-                // min_block_number should be the min of all scripts' block_number when storage's filter_scripts is empty
-                min_block_number = if self.is_filter_scripts_empty() {
-                    min_script_block_number
-                } else {
-                    min_script_block_number.map(|n| n.min(self.get_min_filtered_block_number()))
-                };
 
                 for ss in scripts {
                     let key = [
@@ -341,6 +327,7 @@ impl Storage {
                 if scripts.is_empty() {
                     return;
                 }
+
                 for ss in scripts {
                     let key = [
                         key_prefix.as_ref(),
@@ -358,14 +345,30 @@ impl Storage {
 
         batch.commit().expect("batch commit should be ok");
 
-        if let Some(min_number) = min_block_number {
-            self.update_min_filtered_block_number(min_number);
-        }
+        self.update_min_filtered_block_number_by_scripts();
         self.clear_matched_blocks();
 
         if should_filter_genesis_block {
             let block = self.get_genesis_block();
             self.filter_block(block);
+        }
+    }
+
+    fn update_min_filtered_block_number_by_scripts(&self) {
+        let key_prefix = Key::Meta(FILTER_SCRIPTS_KEY).into_vec();
+        let mode = IteratorMode::From(key_prefix.as_ref(), Direction::Forward);
+
+        let min_block_number = self
+            .db
+            .iterator(mode)
+            .take_while(|(key, _value)| key.starts_with(&key_prefix))
+            .map(|(_key, value)| {
+                BlockNumber::from_be_bytes(value.as_ref().try_into().expect("stored BlockNumber"))
+            })
+            .min();
+
+        if let Some(n) = min_block_number {
+            self.update_min_filtered_block_number(n);
         }
     }
 

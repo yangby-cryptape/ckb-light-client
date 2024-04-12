@@ -1543,6 +1543,53 @@ fn test_set_scripts_partial_min_filtered_block_number_bug() {
 }
 
 #[test]
+fn test_set_scripts_delete_min_filtered_block_number_bug() {
+    let storage = new_storage("set_scripts_delete_min_filtered_block_number_bug");
+    let peers = create_peers();
+    let swc = StorageWithChainData::new(storage.clone(), Arc::clone(&peers), Default::default());
+    let rpc = BlockFilterRpcImpl { swc };
+
+    storage.update_min_filtered_block_number(42);
+    rpc.set_scripts(
+        vec![
+            ScriptStatus {
+                script: Script::new_builder()
+                    .args(Bytes::from("abc").pack())
+                    .build()
+                    .into(),
+                script_type: ScriptType::Lock,
+                block_number: 1234.into(),
+            },
+            ScriptStatus {
+                script: Script::new_builder()
+                    .args(Bytes::from("xyz").pack())
+                    .build()
+                    .into(),
+                script_type: ScriptType::Type,
+                block_number: 5678.into(),
+            },
+        ],
+        Some(SetScriptsCommand::All),
+    )
+    .unwrap();
+    assert_eq!(storage.get_min_filtered_block_number(), 1234,);
+
+    rpc.set_scripts(
+        vec![ScriptStatus {
+            script: Script::new_builder()
+                .args(Bytes::from("abc").pack())
+                .build()
+                .into(),
+            script_type: ScriptType::Lock,
+            block_number: 1234.into(),
+        }],
+        Some(SetScriptsCommand::Delete),
+    )
+    .unwrap();
+    assert_eq!(storage.get_min_filtered_block_number(), 5678,);
+}
+
+#[test]
 fn test_chain_txs_in_same_block_bug() {
     let storage = new_storage("chain_txs_in_same_block_bug");
     let swc = StorageWithChainData::new(storage.clone(), create_peers(), Default::default());
