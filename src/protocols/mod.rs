@@ -21,7 +21,10 @@ pub(crate) use relayer::{PendingTxs, RelayProtocol};
 pub(crate) use status::{Status, StatusCode};
 pub(crate) use synchronizer::SyncProtocol;
 
+// The period to ban a peer for bad messages.
 pub const BAD_MESSAGE_BAN_TIME: Duration = Duration::from_secs(5 * 60);
+// Ban a peer if unexpected responses from that peer reach the limit.
+pub const BAD_MESSAGE_ALLOWED_EACH_HOUR: u32 = 10;
 // Ban a peer if it reach any timeout.
 pub const MESSAGE_TIMEOUT: u64 = 60 * 1000;
 

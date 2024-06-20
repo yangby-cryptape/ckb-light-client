@@ -370,7 +370,7 @@ impl CKBProtocolHandler for FilterProtocol {
 
         let item_name = msg.item_name();
         let status = self.try_process(Arc::clone(&nc), peer, msg);
-        status.process(nc, peer, "BlockFilter", item_name);
+        status.process(nc, &self.peers, peer, "BlockFilter", item_name);
     }
 
     async fn notify(&mut self, nc: Arc<dyn CKBProtocolContext + Sync>, token: u64) {

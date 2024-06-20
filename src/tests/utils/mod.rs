@@ -28,10 +28,12 @@ pub(crate) fn new_storage(prefix: &str) -> Storage {
 
 pub(crate) fn create_peers() -> Arc<Peers> {
     let max_outbound_peers = 1;
+    let bad_message_allowed_each_hour = 0;
     let peers = Peers::new(
         max_outbound_peers,
         CHECK_POINT_INTERVAL,
         (0, Default::default()),
+        bad_message_allowed_each_hour,
     );
     Arc::new(peers)
 }

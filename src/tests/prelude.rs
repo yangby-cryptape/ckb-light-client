@@ -166,11 +166,17 @@ pub(crate) trait ChainExt {
     fn consensus(&self) -> &Consensus;
 
     fn create_peers(&self) -> Arc<Peers> {
+        let bad_message_allowed_each_hour = 0;
+        self.create_peers_with_parameters(bad_message_allowed_each_hour)
+    }
+
+    fn create_peers_with_parameters(&self, bad_message_allowed_each_hour: u32) -> Arc<Peers> {
         let max_outbound_peers = 1;
         let peers = Peers::new(
             max_outbound_peers,
             CHECK_POINT_INTERVAL,
             self.client_storage().get_last_check_point(),
+            bad_message_allowed_each_hour,
         );
         Arc::new(peers)
     }

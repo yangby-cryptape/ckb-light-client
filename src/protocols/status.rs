@@ -3,7 +3,7 @@ use std::{fmt, sync::Arc, time::Duration};
 use ckb_network::{CKBProtocolContext, PeerIndex};
 use log::{debug, error, trace, warn};
 
-use super::BAD_MESSAGE_BAN_TIME;
+use super::{Peers, BAD_MESSAGE_BAN_TIME};
 
 /// StatusCodes indicate whether a specific operation has been successfully completed.
 ///
@@ -157,10 +157,15 @@ impl Status {
     }
 
     /// Whether the session should be banned.
-    pub fn should_ban(&self) -> Option<Duration> {
+    pub fn should_ban(&self, peers: &Peers, index: PeerIndex) -> Option<Duration> {
         let code = self.code() as u16;
         if (400..500).contains(&code) {
-            Some(BAD_MESSAGE_BAN_TIME)
+            // TODO Resort the error codes, let malformed messages, which lead to be banned directly, to be together.
+            if code == 400 || peers.should_ban(index) {
+                Some(BAD_MESSAGE_BAN_TIME)
+            } else {
+                None
+            }
         } else {
             None
         }
@@ -180,11 +185,12 @@ impl Status {
     pub fn process(
         &self,
         nc: Arc<dyn CKBProtocolContext + Sync>,
+        peers: &Peers,
         index: PeerIndex,
         protocol: &str,
         message: &str,
     ) {
-        if let Some(ban_time) = self.should_ban() {
+        if let Some(ban_time) = self.should_ban(peers, index) {
             error!(
                 "{}Protocol.received {} from {}, result {}, ban {:?}",
                 protocol, message, index, self, ban_time
