@@ -1,3 +1,10 @@
+use std::{
+    collections::{HashMap, HashSet},
+    fmt, mem,
+    num::NonZeroU32,
+    sync::{Mutex, RwLock},
+};
+
 use ckb_network::PeerIndex;
 use ckb_systemtime::unix_time_as_millis;
 use ckb_types::{
@@ -9,14 +16,12 @@ use ckb_types::{
     H256, U256,
 };
 use dashmap::DashMap;
-use std::{
-    collections::{HashMap, HashSet},
-    fmt, mem,
-    sync::RwLock,
-};
+use governor::{clock::DefaultClock, state::keyed::DefaultKeyedStateStore, Quota, RateLimiter};
 
 use super::prelude::*;
-use crate::protocols::{Status, StatusCode, MESSAGE_TIMEOUT};
+use crate::protocols::{Status, StatusCode, BAD_MESSAGE_ALLOWED_EACH_HOUR, MESSAGE_TIMEOUT};
+
+pub type BadMessageRateLimiter<T> = RateLimiter<T, DefaultKeyedStateStore<T>, DefaultClock>;
 
 pub struct Peers {
     inner: DashMap<PeerIndex, Peer>,
@@ -45,6 +50,10 @@ pub struct Peers {
 
     check_point_interval: BlockNumber,
     start_check_point: (u32, packed::Byte32),
+
+    rate_limiter: Mutex<BadMessageRateLimiter<PeerIndex>>,
+    #[cfg(test)]
+    bad_message_allowed_each_hour: u32,
 }
 
 #[derive(Clone)]
@@ -1117,9 +1126,21 @@ impl Peers {
         max_outbound_peers: u32,
         check_point_interval: BlockNumber,
         start_check_point: (u32, packed::Byte32),
+        bad_message_allowed_each_hour: u32,
     ) -> Self {
         #[cfg(test)]
         let max_outbound_peers = RwLock::new(max_outbound_peers);
+
+        let rate_limiter = {
+            let limit = if bad_message_allowed_each_hour == 0 {
+                BAD_MESSAGE_ALLOWED_EACH_HOUR
+            } else {
+                bad_message_allowed_each_hour
+            };
+            let max_burst = unsafe { NonZeroU32::new_unchecked(limit) };
+            let quota = Quota::per_hour(max_burst);
+            Mutex::new(RateLimiter::keyed(quota))
+        };
 
         Self {
             inner: Default::default(),
@@ -1130,6 +1151,9 @@ impl Peers {
             max_outbound_peers,
             check_point_interval,
             start_check_point,
+            rate_limiter,
+            #[cfg(test)]
+            bad_message_allowed_each_hour,
         }
     }
 
@@ -1272,6 +1296,7 @@ impl Peers {
         self.mark_fetching_headers_timeout(index);
         self.mark_fetching_txs_timeout(index);
         self.inner.remove(&index);
+        let _ignore_error = self.rate_limiter.lock().map(|inner| inner.retain_recent());
     }
 
     pub(crate) fn get_peers_index(&self) -> Vec<PeerIndex> {
@@ -1964,6 +1989,18 @@ impl Peers {
             })
             .map(|(peer_index, _)| peer_index)
             .collect()
+    }
+
+    pub(crate) fn should_ban(&self, peer_index: PeerIndex) -> bool {
+        #[cfg(test)]
+        if self.bad_message_allowed_each_hour == 0 {
+            return true;
+        }
+        self.rate_limiter
+            .lock()
+            .map_err(|_| ())
+            .and_then(|inner| inner.check_key(&peer_index).map_err(|_| ()))
+            .is_err()
     }
 }
 

@@ -14,7 +14,7 @@ use crate::{
     error::{Error, Result},
     protocols::{
         FilterProtocol, LightClientProtocol, Peers, PendingTxs, RelayProtocol, SyncProtocol,
-        CHECK_POINT_INTERVAL,
+        BAD_MESSAGE_ALLOWED_EACH_HOUR, CHECK_POINT_INTERVAL,
     },
     service::Service,
     storage::Storage,
@@ -65,6 +65,7 @@ impl RunConfig {
             max_outbound_peers,
             CHECK_POINT_INTERVAL,
             storage.get_last_check_point(),
+            BAD_MESSAGE_ALLOWED_EACH_HOUR,
         ));
         let sync_protocol = SyncProtocol::new(storage.clone(), Arc::clone(&peers));
         let relay_protocol_v2 = RelayProtocol::new(

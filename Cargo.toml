@@ -44,6 +44,7 @@ jsonrpc-core = "18.0"
 jsonrpc-derive = "18.0"
 jsonrpc-http-server = "18.0"
 jsonrpc-server-utils = "18.0"
+governor = "0.6.3"
 
 [dev-dependencies]
 ckb-shared      = "0.113.0"

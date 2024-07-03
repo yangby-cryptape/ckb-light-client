@@ -129,7 +129,7 @@ impl CKBProtocolHandler for LightClientProtocol {
 
         let item_name = msg.item_name();
         let status = self.try_process(nc.as_ref(), peer_index, msg);
-        status.process(nc, peer_index, "LightClient", item_name);
+        status.process(nc, self.peers(), peer_index, "LightClient", item_name);
     }
 
     async fn notify(&mut self, nc: Arc<dyn CKBProtocolContext + Sync>, token: u64) {

@@ -81,7 +81,6 @@ async fn test_block_filter_ignore_start_number() {
         .set(content)
         .build();
 
-    let peer_index = PeerIndex::new(3);
     protocol
         .received(nc.context(), peer_index, message.as_bytes())
         .await;
@@ -131,7 +130,6 @@ async fn test_block_filter_empty_filters() {
         .set(content)
         .build();
 
-    let peer_index = PeerIndex::new(3);
     protocol
         .received(nc.context(), peer_index, message.as_bytes())
         .await;
@@ -144,6 +142,7 @@ async fn test_block_filter_empty_filters() {
 async fn test_block_filter_invalid_filters_count() {
     let chain = MockChain::new_with_dummy_pow("test-block-filter");
     let nc = MockNetworkContext::new(SupportProtocols::Filter);
+    let bad_message_allowed_each_hour = 5;
 
     let min_filtered_block_number = 3;
     chain.client_storage().update_filter_scripts(
@@ -166,7 +165,7 @@ async fn test_block_filter_invalid_filters_count() {
             None,
             Default::default(),
         );
-        let peers = chain.create_peers();
+        let peers = chain.create_peers_with_parameters(bad_message_allowed_each_hour);
         peers.add_peer(peer_index);
         peers.mock_prove_state(peer_index, tip_header).unwrap();
         peers
@@ -181,11 +180,9 @@ async fn test_block_filter_invalid_filters_count() {
         .set(content)
         .build();
 
-    let peer_index = PeerIndex::new(3);
     protocol
         .received(nc.context(), peer_index, message.as_bytes())
         .await;
-
     assert_eq!(
         nc.has_banned(peer_index).map(|(duration, _)| duration),
         Some(BAD_MESSAGE_BAN_TIME)

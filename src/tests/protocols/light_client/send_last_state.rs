@@ -69,8 +69,9 @@ async fn invalid_chain_root() {
     let nc = MockNetworkContext::new(SupportProtocols::LightClient);
 
     let peer_index = PeerIndex::new(1);
+    let bad_message_allowed_each_hour = 5;
     let peers = {
-        let peers = chain.create_peers();
+        let peers = chain.create_peers_with_parameters(bad_message_allowed_each_hour);
         peers.add_peer(peer_index);
         peers.request_last_state(peer_index).unwrap();
         peers
@@ -94,8 +95,14 @@ async fn invalid_chain_root() {
     }
     .as_bytes();
 
-    protocol.received(nc.context(), peer_index, data).await;
+    for _ in 0..bad_message_allowed_each_hour {
+        protocol
+            .received(nc.context(), peer_index, data.clone())
+            .await;
+        assert!(nc.not_banned(peer_index));
+    }
 
+    protocol.received(nc.context(), peer_index, data).await;
     assert!(nc.banned_since(peer_index, StatusCode::InvalidChainRoot));
 }
 
