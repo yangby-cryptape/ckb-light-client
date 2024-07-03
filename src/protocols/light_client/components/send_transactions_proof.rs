@@ -178,7 +178,7 @@ impl<'a> SendTransactionsProofProcess<'a> {
                     }
                 }
             }
-            debug!("verify SendBlocksProof ok");
+            debug!("verify SendTransactionsProof ok");
 
             for (filtered_block, extension) in filtered_blocks.into_iter().zip(extensions.iter()) {
                 let header = filtered_block.header().into_view();
