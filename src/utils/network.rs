@@ -1,7 +1,7 @@
 use crate::protocols::{Peers, GET_BLOCKS_PROOF_LIMIT};
 use ckb_network::{CKBProtocolContext, SupportProtocols};
 use ckb_types::{packed, prelude::*, H256};
-use log::{debug, error};
+use log::{debug, info};
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -53,7 +53,7 @@ pub(crate) fn prove_or_download_matched_blocks(
                 ) {
                     let error_message =
                         format!("nc.send_message LightClientMessage, error: {:?}", err);
-                    error!("{}", error_message);
+                    info!("{}", error_message);
                 }
             } else {
                 break;
@@ -97,7 +97,7 @@ pub(crate) fn prove_or_download_matched_blocks(
                     nc.send_message(SupportProtocols::Sync.protocol_id(), *peer_index, message)
                 {
                     let error_message = format!("nc.send_message SyncMessage, error: {:?}", err);
-                    error!("{}", error_message);
+                    info!("{}", error_message);
                 }
             } else {
                 break;
