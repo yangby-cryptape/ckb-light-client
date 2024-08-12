@@ -5,7 +5,7 @@ use ckb_types::{
     prelude::*,
     utilities::merkle_mountain_range::VerifiableHeader,
 };
-use log::{debug, error};
+use log::{debug, error, info};
 use rand::seq::SliceRandom;
 
 use crate::storage::HeaderWithExtension;
@@ -207,7 +207,7 @@ impl<'a> SendBlocksProofProcess<'a> {
                         ) {
                             let error_message =
                                 format!("nc.send_message SyncMessage, error: {:?}", err);
-                            error!("{}", error_message);
+                            info!("{}", error_message);
                             return StatusCode::Network.with_context(error_message);
                         }
                     }

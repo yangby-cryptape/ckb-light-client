@@ -6,7 +6,7 @@ use ckb_constant::sync::INIT_BLOCKS_IN_TRANSIT_PER_PEER;
 use ckb_network::{async_trait, bytes::Bytes, CKBProtocolContext, CKBProtocolHandler, PeerIndex};
 use ckb_types::{core::BlockNumber, packed, prelude::*};
 use golomb_coded_set::{GCSFilterReader, SipHasher24Builder, M, P};
-use log::{debug, error, info, log_enabled, trace, warn, Level};
+use log::{debug, info, log_enabled, trace, warn, Level};
 use rand::seq::SliceRandom as _;
 use std::io::Cursor;
 use std::sync::RwLock;
@@ -259,7 +259,7 @@ impl FilterProtocol {
             .build();
         if let Err(err) = nc.send_message_to(peer, message.as_bytes()) {
             let error_message = format!("nc.send_message GetBlockFilters, error: {:?}", err);
-            error!("{}", error_message);
+            info!("{}", error_message);
         }
     }
 
@@ -282,7 +282,7 @@ impl FilterProtocol {
             .build();
         if let Err(err) = nc.send_message_to(peer, message.as_bytes()) {
             let error_message = format!("nc.send_message GetBlockFilterHashes, error: {:?}", err);
-            error!("{}", error_message);
+            info!("{}", error_message);
         }
     }
 
@@ -308,7 +308,7 @@ impl FilterProtocol {
                 "nc.send_message GetBlockFilterCheckPoints, error: {:?}",
                 err
             );
-            error!("{}", error_message);
+            info!("{}", error_message);
         }
     }
 }

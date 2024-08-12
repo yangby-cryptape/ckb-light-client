@@ -749,7 +749,7 @@ impl LightClientProtocol {
                     ) {
                         let error_message =
                             format!("nc.send_message LightClientMessage, error: {:?}", err);
-                        error!("{}", error_message);
+                        info!("{}", error_message);
                     }
                     self.peers.fetching_idle_headers(block_hashes, now);
                 }
@@ -788,7 +788,7 @@ impl LightClientProtocol {
                 ) {
                     let error_message =
                         format!("nc.send_message LightClientMessage, error: {:?}", err);
-                    error!("{}", error_message);
+                    info!("{}", error_message);
                 }
                 self.peers.fetching_idle_txs(tx_hashes, now);
             } else {
