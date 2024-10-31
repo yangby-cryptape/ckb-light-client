@@ -142,7 +142,7 @@ impl FilterProtocol {
             {
                 debug!(
                     "try recover matched blocks from storage, start_number={}, \
-                             blocks_count={}, matched_count: {}",
+                    blocks_count={}, matched_count: {}",
                     db_start_number,
                     blocks_count,
                     matched_blocks.len(),
@@ -151,21 +151,21 @@ impl FilterProtocol {
                     // recover matched blocks from storage
                     self.peers
                         .add_matched_blocks(&mut matched_blocks, db_blocks);
-                    let tip_header = self.storage.get_tip_header();
-                    prove_or_download_matched_blocks(
-                        Arc::clone(&self.peers),
-                        &tip_header,
-                        &matched_blocks,
-                        nc.as_ref(),
-                        INIT_BLOCKS_IN_TRANSIT_PER_PEER,
+                }
+                let tip_header = self.storage.get_tip_header();
+                prove_or_download_matched_blocks(
+                    Arc::clone(&self.peers),
+                    &tip_header,
+                    &matched_blocks,
+                    nc.as_ref(),
+                    INIT_BLOCKS_IN_TRANSIT_PER_PEER,
+                );
+                if could_ask_more {
+                    debug!(
+                        "send get block filters to {}, start_number={}",
+                        peer, start_number
                     );
-                    if could_ask_more {
-                        debug!(
-                            "send get block filters to {}, start_number={}",
-                            peer, start_number
-                        );
-                        self.send_get_block_filters(nc, *peer, start_number);
-                    }
+                    self.send_get_block_filters(nc, *peer, start_number);
                 }
             } else if self.should_ask(immediately) && could_ask_more {
                 debug!(
